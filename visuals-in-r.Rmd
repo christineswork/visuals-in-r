@@ -1,0 +1,108 @@
+---
+title: "visuals-in-r"
+author: "Christine Bui"
+output: html_document
+---
+
+## PROBLEM 1:
+Reading the .csv file and converting some predictors. 
+```{r}
+# importing file using read.csv and omitting missing values
+auto <- read.csv("Auto.csv", TRUE)
+head(auto)
+na.omit(auto)
+```
+```{r}
+# identifying which predictors are qualitative or quantitative 
+sapply(auto, class)
+
+# origin has values from 1-3 which means 1-3 represent different origins 
+head(unique(auto$name[auto$origin == 1]), 30)       # 1 = U.S. made
+head(unique(auto$name[auto$origin == 2]), 30)       # 2 = Europe made
+head(unique(auto$name[auto$origin == 3]), 30)       # 3 = Japan made
+
+# converting origin into factor/character and converting horsepower into numeric
+auto$origin <- factor(auto$origin, levels = 1:3, labels = c("U.S", "Europe", "Japan"))
+auto$horsepower <- as.numeric(c(auto$horsepower)) 
+sapply(auto, class)
+
+# view which predictors are now quantitative and the leftover are qualitative 
+quant <- sapply(auto, is.numeric)
+quant
+```
+After making necessary conversions, there are 2 qualitative predictors (name and origin) and 7 quantitative predictors (mpg, cylinders, displacement, horsepower, weight, acceleration, and year).
+
+
+Now, let's perform basic statistics concepts onto our quantitative predictors and dataset.
+```{r}
+# checks range of the quantitative predictors
+sapply(auto[, quant], range) 
+
+# generates the mean and standard deviation of quantiative predictors
+sapply(auto[, quant], function(x) signif(c(mean(x), sd(x)), 2))
+
+obs <- sapply(auto[-10:-85, quant], function(x) round(c(range(x), mean(x), sd(x))))
+# create rows that display the range (min and max), mean, and standard deviation
+rownames(obs) <- c("min", "max", "mean", "sd")
+obs
+```
+
+Generating a scatterplot matrix using only quantitative predictors.
+```{r}
+pairs(~mpg + cylinders + displacement + horsepower + weight + acceleration + year, data = auto)
+```
+
+We see that mpg has a negative relationship with displacement and weight and has a positive relationship with acceleration and year. Displacement has a positive relationship with weight, Weight has a negative relationship with year. Some plots show no relationship to each other such as mpg and horsepower, horsepower and weight, horsepower and acceleration, etc. (usually the clustered scatter plots).
+
+NOTE: Positive correlations mean that as one variable increases, then the other also increases. Negative correlations mean that as one variable increase/decrease, then the other will do the exact opposite. 
+
+
+## PROBLEM 2:
+Reading the .txt file 
+```{r}
+cod <- read.table("CodParasite.txt", TRUE)
+head(cod)
+```
+
+Let's generate boxplots on the number of parasites (Intensity) conditional on Area, Sex, Stage, and Year. 
+```{r}
+# will be taking the log transform of Intensity so we get interpretable results
+boxplot(log(cod$Intensity + 1) ~ Area, data = cod, ylab = "Intensity")
+boxplot(log(cod$Intensity + 1) ~ Sex, data = cod, ylab = "Intensity")
+boxplot(log(cod$Intensity + 1) ~ Stage, data = cod, ylab = "Intensity")
+boxplot(log(cod$Intensity + 1) ~ Year, data = cod, ylab = "Intensity")
+```
+
+After viewing the boxplots, the conditional variable that has an association with number of parasites (Intensity) is Area. I compared the medians to see if they overlapped one another. If there is an overlap, there's less association; if there is no overlap, there's higher association
+
+Area 4 boxplot does not overlap with Areas 1-3 boxplots; all other conditional variables have medians that overlap each other.
+
+
+## PROBLEM 3:
+Reading the .txt file 
+```{r}
+# importing file using read.table
+owl <- read.table("Owls.txt", TRUE)
+head(owl)
+```
+
+Let's generate boxplots conditional on SexParent, FoodTreatment, and all combos of SexParent and FoodTreatment. 
+```{r}
+boxplot(NegPerChick ~ SexParent, data = owl)
+boxplot(NegPerChick ~ FoodTreatment, data = owl)
+boxplot(NegPerChick ~ SexParent * FoodTreatment, data = owl)
+```
+
+I want to specifically look at nesting sites. Let's generate boxplots condition to Nest and see if there's a difference across nesting sites.
+```{r}
+boxplot(NegPerChick ~ Nest, data = owl)
+```
+
+We see that there are differences for NegPerChick across nesting sites. When comparing the medians of all the boxplots, the only one that does not overlap is Sevaz, which concludes that there is some type of difference across nesting sites. 
+
+Let's generate a scatterplot between NegPerChick and SiblingNegotiation. Is there an association between these two variables?
+```{r}
+plot(NegPerChick ~ SiblingNegotiation, data = owl)
+```
+
+So yes, there is an association between NegPerChick and SiblingNegotiation. There is a positive association between NegPerChick and SiblingNegotiation because as one variable increases then the other also increases. 
